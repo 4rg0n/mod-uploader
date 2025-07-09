@@ -1,7 +1,7 @@
 package com.github.argon.moduploader.core.vendor.steam.api;
 
-import com.github.argon.moduploader.core.vendor.steam.api.dto.SteamDtoMapper;
-import com.github.argon.moduploader.core.vendor.steam.api.dto.SteamSimpleStoreItemDto;
+import com.github.argon.moduploader.core.vendor.steam.mapper.SteamDtoMapper;
+import com.github.argon.moduploader.core.vendor.steam.api.dto.SteamSimpleAppDto;
 import jakarta.annotation.Nullable;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -19,7 +19,7 @@ public interface SteamStoreClient {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/IStoreService/GetAppList/v1")
-    List<SteamSimpleStoreItemDto> getApps(
+    List<SteamSimpleAppDto> getApps(
         @QueryParam("key") String apiKey,
         @Nullable @QueryParam("include_games") Boolean includeGames,
         @Nullable @QueryParam("include_dlc") Boolean includeDlc,
@@ -28,5 +28,16 @@ public interface SteamStoreClient {
         @Nullable @QueryParam("include_hardware") Boolean includeHardware,
         @Nullable @QueryParam("last_appid") Integer lastAppId,
         @Nullable @QueryParam("max_results") Integer maxResults
+    );
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("IPlayerService/GetOwnedGames/v1")
+    List<SteamSimpleAppDto> getUserApps(
+        @QueryParam("key") String apiKey,
+        @QueryParam("steamid") Long userId,
+        @Nullable @QueryParam("include_appinfo") Boolean includeAppinfo,
+        @Nullable @QueryParam("include_played_free_games") Boolean includePlayedFreeGames,
+        @Nullable @QueryParam("appids_filter") Integer appId
     );
 }

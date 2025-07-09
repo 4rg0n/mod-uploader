@@ -7,9 +7,9 @@ import com.github.argon.moduploader.core.Initializable;
 import com.github.argon.moduploader.core.InitializeException;
 import com.github.argon.moduploader.core.NotInitializedException;
 import com.github.argon.moduploader.core.file.IFileService;
-import com.github.argon.moduploader.core.vendor.steam.api.SteamStoreClient;
 import com.github.argon.moduploader.core.vendor.steam.api.SteamUserHandler;
 import com.github.argon.moduploader.core.vendor.steam.api.SteamWorkshopHandler;
+import com.github.argon.moduploader.core.vendor.steam.mapper.SteamMapper;
 import jakarta.annotation.Nullable;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -31,13 +31,15 @@ public class Steam implements Closeable, Awaitable, Runnable, Initializable<Inte
     @Getter
     private final String steamAppIdTxt;
     private SteamWorkshopService workshop;
+    private SteamUserHandler user;
+    private final SteamStoreService store;
     private Integer appId = SteamConfiguration.DEFAULT_APP_ID;
     private final IFileService fileService;
-    private final SteamStoreClient storeClient;
+
     private final SteamMapper mapper;
 
-    public Steam(IFileService fileService, SteamStoreClient storeClient, SteamMapper mapper) {
-        this(SteamConfiguration.STEAM_APP_ID_TXT, fileService, storeClient, mapper);
+    public Steam(IFileService fileService, SteamStoreService storeService, SteamMapper mapper) {
+        this(SteamConfiguration.STEAM_APP_ID_TXT, fileService, storeService, mapper);
     }
 
 
@@ -49,13 +51,13 @@ public class Steam implements Closeable, Awaitable, Runnable, Initializable<Inte
     public Steam(
         String steamAppIdTxt,
         IFileService fileService,
-        SteamStoreClient storeClient,
+        SteamStoreService storeService,
         SteamMapper mapper
     ) {
         this.steamAppIdTxt = steamAppIdTxt;
         this.fileService = fileService;
         this.mapper = mapper;
-        this.storeClient = storeClient;
+        this.store = storeService;
     }
 
     public SteamWorkshopService workshop() {
@@ -64,6 +66,14 @@ public class Steam implements Closeable, Awaitable, Runnable, Initializable<Inte
         }
 
         return workshop;
+    }
+
+    public SteamUserHandler user() {
+        if (user == null) {
+            throw new NotInitializedException("You have to call Steam.init(appId) first");
+        }
+
+        return user;
     }
 
     public Integer appId() {
@@ -97,14 +107,13 @@ public class Steam implements Closeable, Awaitable, Runnable, Initializable<Inte
      */
     @Override
     public boolean init(Integer appId) {
-        log.debug("Initializing SteamAPI with appId: {}", appId);
-
         close();
         initSteamAppId(appId);
         initSteamNativeApi(appId);
 
-        workshop = new SteamWorkshopService(new SteamWorkshopHandler(appId), mapper, new SteamUserHandler());
-        this.appId = appId;
+        user = new SteamUserHandler();
+        workshop = new SteamWorkshopService(new SteamWorkshopHandler(appId), mapper, user);
+        log.debug("Initialized SteamAPI with appId: {} user: {}", appId, user.getSteamID().getAccountID());
 
         return true;
     }
@@ -177,6 +186,8 @@ public class Steam implements Closeable, Awaitable, Runnable, Initializable<Inte
         } catch (Exception e) {
             throw new InitializeException("Error writing Steam App ID " + appId + " into " + steamAppIdTxtPath, e);
         }
+
+        this.appId = appId;
     }
 
     /**

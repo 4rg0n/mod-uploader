@@ -1,4 +1,4 @@
-package com.github.argon.moduploader.core.vendor.steam.api.dto;
+package com.github.argon.moduploader.core.vendor.steam.mapper;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;

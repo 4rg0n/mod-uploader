@@ -9,10 +9,10 @@ import java.io.Closeable;
  */
 public class SteamUserHandler implements Closeable {
 
-    private final com.codedisaster.steamworks.SteamUser steamUser;
+    private final SteamUser steamUser;
 
     public SteamUserHandler() {
-        steamUser = new com.codedisaster.steamworks.SteamUser(new Callback());
+        steamUser = new SteamUser(new Callback());
     }
 
     public SteamID getSteamID() {

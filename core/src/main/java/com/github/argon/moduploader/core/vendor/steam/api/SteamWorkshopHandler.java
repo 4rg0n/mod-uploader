@@ -25,7 +25,7 @@ public class SteamWorkshopHandler extends SteamCallback implements Closeable {
     @Nullable
     private BiConsumer<SteamPublishedFileID, SteamResult> updateHandler = null;
     @Nullable
-    private BiConsumer<SteamPublishedFileID, SteamResult> creationHandler = null;
+    private BiConsumer<SteamPublishedFileID, SteamResult> createHandler = null;
     @Nullable
     private BiConsumer<SteamPublishedFileID, SteamResult> deleteHandler = null;
     private final Map<SteamQuery, SteamResults> queryHandlers = new HashMap<>();
@@ -57,7 +57,7 @@ public class SteamWorkshopHandler extends SteamCallback implements Closeable {
     }
 
     public void create(BiConsumer<SteamPublishedFileID, SteamResult> creationHandler) {
-        this.creationHandler = creationHandler;
+        this.createHandler = creationHandler;
         workshop.createItem(appId, SteamRemoteStorage.WorkshopFileType.Community);
     }
 
@@ -154,14 +154,15 @@ public class SteamWorkshopHandler extends SteamCallback implements Closeable {
     }
 
     public boolean hasHandlers() {
-        return !queryHandlers.isEmpty() || creationHandler != null || updateHandler != null || deleteHandler != null;
+        return !queryHandlers.isEmpty() || createHandler != null || updateHandler != null || deleteHandler != null;
     }
 
     public void clearHandlers() {
-        creationHandler = null;
+        createHandler = null;
         updateHandler = null;
         deleteHandler = null;
         queryHandlers.clear();
+        queryToQuery.clear();
     }
 
     @Override
@@ -197,13 +198,13 @@ public class SteamWorkshopHandler extends SteamCallback implements Closeable {
             log.warn("Create new workshop item failed: {}", result);
         }
 
-        if (creationHandler == null) {
+        if (createHandler == null) {
             log.info("No handler for mod create registered");
             return;
         }
 
-        creationHandler.accept(publishedFileID, result);
-        creationHandler = null;
+        createHandler.accept(publishedFileID, result);
+        createHandler = null;
     }
 
     @Override
@@ -253,6 +254,9 @@ public class SteamWorkshopHandler extends SteamCallback implements Closeable {
         send(steamResults.getQuery(), steamResults.getCallback());
     }
 
+    /**
+     * When a Workshop item was deleted
+     */
     @Override
     public void onDeleteItem(SteamPublishedFileID publishedFileID, SteamResult result) {
         if (result != SteamResult.OK) {

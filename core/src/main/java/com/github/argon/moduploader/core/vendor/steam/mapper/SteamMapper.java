@@ -1,4 +1,4 @@
-package com.github.argon.moduploader.core.vendor.steam;
+package com.github.argon.moduploader.core.vendor.steam.mapper;
 
 import com.codedisaster.steamworks.SteamID;
 import com.codedisaster.steamworks.SteamPublishedFileID;
@@ -54,4 +54,7 @@ public class SteamMapper {
     public Integer map(SteamID value) {
         return Integer.parseInt(value.toString(), 16);
     }
+
+
+
 }

@@ -8,8 +8,7 @@ import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 
 @ApplicationScoped
-public class CoreCdiConfiguration {
-
+public class CoreConfiguration {
     @Produces
     @Singleton
     public IFileService getFileService(
