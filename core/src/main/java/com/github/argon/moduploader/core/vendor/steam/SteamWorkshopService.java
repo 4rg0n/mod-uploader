@@ -6,7 +6,7 @@ import com.codedisaster.steamworks.SteamResult;
 import com.github.argon.moduploader.core.vendor.VendorException;
 import com.github.argon.moduploader.core.vendor.steam.api.SteamUserHandler;
 import com.github.argon.moduploader.core.vendor.steam.api.SteamWorkshopHandler;
-import com.github.argon.moduploader.core.vendor.steam.mapper.SteamMapper;
+import com.github.argon.moduploader.core.vendor.steam.mapper.SteamAPIMapper;
 import com.github.argon.moduploader.core.vendor.steam.model.SteamMod;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ import java.util.function.BiConsumer;
 @RequiredArgsConstructor
 public class SteamWorkshopService implements Closeable {
     private final SteamWorkshopHandler workshop;
-    private final SteamMapper mapper;
+    private final SteamAPIMapper mapper;
     private final SteamUserHandler user;
 
     /**

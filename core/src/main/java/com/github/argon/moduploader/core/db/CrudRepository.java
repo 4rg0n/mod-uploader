@@ -1,8 +1,10 @@
 package com.github.argon.moduploader.core.db;
 
+import com.github.argon.moduploader.core.Page;
 import io.agroal.api.AgroalDataSource;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -16,12 +18,10 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class CrudRepository<ID, T extends Entity<ID>> implements Repository<ID, T>, AutoCloseable {
-    @Getter
     private Connection connection;
     @Getter
     private final String tableName;
     private final AgroalDataSource dataSource;
-    @Getter
     private final RepoMapper<ID, T> mapper;
 
     public Connection connect() throws SQLException {
@@ -40,6 +40,7 @@ public class CrudRepository<ID, T extends Entity<ID>> implements Repository<ID, 
         }
     }
 
+    @Override
     public List<T> findByLike(String searchTerm) {
         String sql = String.format("SELECT * FROM %s WHERE SEARCHABLE LIKE '?'", getTableName());
 
@@ -50,9 +51,37 @@ public class CrudRepository<ID, T extends Entity<ID>> implements Repository<ID, 
             statement.setString(1, "%" + searchTerm + "%");
             ResultSet resultSet = statement.executeQuery();
 
-            return getMapper().mapList(resultSet);
+            return mapper.mapResultList(resultSet);
         } catch (SQLException e) {
-            throw new DatabaseException("Error selecting like", e);
+            throw new DatabaseException(e);
+        }
+    }
+
+    @Override
+    public Page<T> findByLike(String searchTerm, Pageable pageable) {
+        String totalRowsSql = String.format("SELECT COUNT(ID) FROM %s WHERE SEARCHABLE LIKE '?' OFFSET ? LIMIT ?", getTableName());
+        String sql = String.format("SELECT * FROM %s WHERE SEARCHABLE LIKE '?' OFFSET ? LIMIT ?", getTableName());
+
+        try (
+            Connection connection = connect();
+            PreparedStatement totalRowsStatement =  connection.prepareStatement(totalRowsSql);
+            PreparedStatement statement =  connection.prepareStatement(sql)
+        ) {
+            totalRowsStatement.setString(1, "%" + searchTerm + "%");
+            totalRowsStatement.setLong(2, pageable.getOffset());
+            totalRowsStatement.setLong(3, pageable.getOffset() + pageable.getPageSize());
+            ResultSet totalRowsResult = totalRowsStatement.executeQuery();
+            long totalRows = totalRowsResult.next() ? totalRowsResult.getLong(1) : 0;
+
+            statement.setString(1, "%" + searchTerm + "%");
+            statement.setLong(2, pageable.getOffset());
+            statement.setLong(3, pageable.getOffset() + pageable.getPageSize());
+            ResultSet resultSet = statement.executeQuery();
+            List<T> entities = mapper.mapResultList(resultSet);
+
+            return Page.of(entities, pageable, totalRows);
+        } catch (SQLException e) {
+            throw new DatabaseException(e);
         }
     }
 
@@ -76,13 +105,13 @@ public class CrudRepository<ID, T extends Entity<ID>> implements Repository<ID, 
                     continue; // skip
                 }
 
-                mapper.map(statement, entity);
+                mapper.mapStatement(statement, entity);
                 statement.addBatch();
             }
 
             return Arrays.stream(statement.executeBatch()).sum();
         } catch (SQLException e) {
-            throw new DatabaseException("Error inserting", e);
+            throw new DatabaseException(e);
         }
     }
 
@@ -97,33 +126,89 @@ public class CrudRepository<ID, T extends Entity<ID>> implements Repository<ID, 
         ) {
             for (int i = 1; i <= ids.size(); i++) {
                 ID id = ids.get(i - 1);
-                mapper.mapIdIn(statement, i, id);
+                mapper.mapStatementIdIn(statement, i, id);
             }
             ResultSet resultSet = statement.executeQuery();
 
-            return mapper.mapList(resultSet);
+            return mapper.mapResultList(resultSet);
         } catch (SQLException e) {
-            throw new DatabaseException("Error selecting", e);
+            throw new DatabaseException(e);
+        }
+    }
+
+    @Override
+    public Page<T> findByIds(List<ID> ids, Pageable pageable) {
+        String totalRowsSql = String.format("SELECT COUNT(ID) FROM %s WHERE ID IN (%s) OFFSET ? LIMIT ?", tableName, ids.stream()
+            .map(v -> "?")
+            .collect(Collectors.joining(", ")));
+
+        String sql = String.format("SELECT * FROM %s WHERE ID IN (%s) OFFSET ? LIMIT ?", tableName, ids.stream()
+            .map(v -> "?")
+            .collect(Collectors.joining(", ")));
+
+        try (
+            Connection connection = connect();
+            PreparedStatement totalRowsStatement =  connection.prepareStatement(totalRowsSql);
+            PreparedStatement statement =  connection.prepareStatement(sql)
+        ) {
+            for (int i = 1; i <= ids.size(); i++) {
+                ID id = ids.get(i - 1);
+                mapper.mapStatementIdIn(statement, i, id);
+                mapper.mapStatementIdIn(totalRowsStatement, i, id);
+            }
+
+            totalRowsStatement.setLong(ids.size() + 1, pageable.getOffset());
+            totalRowsStatement.setLong(ids.size() + 2, pageable.getOffset() + pageable.getPageSize());
+            ResultSet totalRowsResult = totalRowsStatement.executeQuery();
+            long totalRows = totalRowsResult.next() ? totalRowsResult.getLong(1) : 0;
+
+            statement.setLong(ids.size() + 1, pageable.getOffset());
+            statement.setLong(ids.size() + 2, pageable.getOffset() + pageable.getPageSize());
+            ResultSet resultSet = statement.executeQuery();
+            List<T> entities = mapper.mapResultList(resultSet);
+
+            return Page.of(entities, pageable, totalRows);
+        } catch (SQLException e) {
+            throw new DatabaseException(e);
+        }
+    }
+
+    @Override
+    public Page<T> findAll(Pageable pageable) {
+        String sql = String.format("SELECT * FROM %s OFFSET ? LIMIT ?", tableName);
+        try (
+            Connection connection = connect();
+            PreparedStatement statement =  connection.prepareStatement(sql)
+        ) {
+            statement.setLong(1, pageable.getOffset());
+            statement.setLong(2, pageable.getOffset() + pageable.getPageSize());
+
+            ResultSet resultSet = statement.executeQuery();
+            List<T> entities = mapper.mapResultList(resultSet);
+
+            return Page.of(entities, pageable, count());
+        } catch (SQLException e) {
+            throw new DatabaseException(e);
         }
     }
 
     @Override
     public List<T> findAll() {
-        String sql = String.format("SELECT * FROM %s ORDER BY ID ASC", tableName);
+        String sql = String.format("SELECT * FROM %s", tableName);
         try (
             Connection connection = connect();
             PreparedStatement statement =  connection.prepareStatement(sql)
         ) {
             ResultSet resultSet = statement.executeQuery();
-            return mapper.mapList(resultSet);
+            return mapper.mapResultList(resultSet);
         } catch (SQLException e) {
-            throw new DatabaseException("Error selecting all", e);
+            throw new DatabaseException(e);
         }
     }
 
     @Override
     public List<ID> ids() {
-        String sql = String.format("SELECT ID FROM %s ORDER BY ID ASC", tableName);
+        String sql = String.format("SELECT ID FROM %s", tableName);
         try (
             Connection connection = connect();
             PreparedStatement statement =  connection.prepareStatement(sql)
@@ -131,13 +216,13 @@ public class CrudRepository<ID, T extends Entity<ID>> implements Repository<ID, 
             ResultSet resultSet = statement.executeQuery();
             List<ID> ids = new ArrayList<>();
             while(resultSet.next()) {
-                ID id = mapper.mapId(resultSet);
+                ID id = mapper.mapResultId(resultSet);
                 ids.add(id);
             }
 
             return ids;
         } catch (SQLException e) {
-            throw new DatabaseException("Error selecting games", e);
+            throw new DatabaseException(e);
         }
     }
 
@@ -151,10 +236,10 @@ public class CrudRepository<ID, T extends Entity<ID>> implements Repository<ID, 
             Connection connection = connect();
             PreparedStatement statement =  connection.prepareStatement(sql)
         ) {
-            mapper.map(statement, entity);
+            mapper.mapStatement(statement, entity);
             return statement.executeUpdate();
         } catch (SQLException e) {
-            throw new DatabaseException("Error inserting games", e);
+            throw new DatabaseException(e);
         }
     }
 
@@ -171,10 +256,10 @@ public class CrudRepository<ID, T extends Entity<ID>> implements Repository<ID, 
             Connection connection = connect();
             PreparedStatement statement =  connection.prepareStatement(sql)
         ) {
-            mapper.mapId(statement, id);
+            mapper.mapStatementId(statement, id);
             return statement.executeUpdate();
         } catch (SQLException e) {
-            throw new DatabaseException("Error deleting by id " + id , e);
+            throw new DatabaseException(e);
         }
     }
 
@@ -189,11 +274,11 @@ public class CrudRepository<ID, T extends Entity<ID>> implements Repository<ID, 
             PreparedStatement statement =  connection.prepareStatement(sql)
         ) {
             for (int i = 1; i <= entities.size(); i++) {
-                mapper.mapIdIn(statement, i, entities.get(i - 1).id());
+                mapper.mapStatementIdIn(statement, i, entities.get(i - 1).id());
             }
             return statement.executeUpdate();
         } catch (SQLException e) {
-            throw new DatabaseException("Error deleting", e);
+            throw new DatabaseException(e);
         }
     }
 
@@ -206,7 +291,7 @@ public class CrudRepository<ID, T extends Entity<ID>> implements Repository<ID, 
         ) {
             return statement.executeUpdate();
         } catch (SQLException e) {
-            throw new DatabaseException("Error deleting all", e);
+            throw new DatabaseException(e);
         }
     }
 
@@ -218,12 +303,37 @@ public class CrudRepository<ID, T extends Entity<ID>> implements Repository<ID, 
             Connection connection = connect();
             PreparedStatement statement =  connection.prepareStatement(sql)
         ) {
-            mapper.mapId(statement, id);
+            mapper.mapStatementId(statement, id);
             ResultSet resultSet = statement.executeQuery();
 
-            return mapper.map(resultSet);
+            return mapper.mapResult(resultSet);
         } catch (SQLException e) {
-            throw new DatabaseException("Error selecting games", e);
+            throw new DatabaseException(e);
         }
+    }
+
+    @Override
+    public int count() {
+        String sql = String.format("SELECT COUNT(ID) FROM %s ", tableName);
+
+        try (
+            Connection connection = connect();
+            PreparedStatement statement =  connection.prepareStatement(sql)
+        ) {
+            ResultSet resultSet = statement.executeQuery();
+
+            if (!resultSet.next()) {
+                return 0;
+            }
+
+            return resultSet.getInt(1);
+        } catch (SQLException e) {
+            throw new DatabaseException(e);
+        }
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return count() == 0;
     }
 }

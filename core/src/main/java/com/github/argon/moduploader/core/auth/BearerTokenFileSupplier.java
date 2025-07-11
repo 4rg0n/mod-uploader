@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 
 @Slf4j
 @RequiredArgsConstructor
-public class BearerTokenFileProvider implements Supplier<BearerToken>, Clearable {
+public class BearerTokenFileSupplier implements Supplier<BearerToken>, Clearable {
     private BearerToken token;
     private final Path path;
     private final IFileService fileService;

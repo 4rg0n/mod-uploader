@@ -1,12 +1,13 @@
 package com.github.argon.moduploader.core.vendor.modio;
 
 import com.github.argon.moduploader.core.auth.BearerTokenFileConsumer;
-import com.github.argon.moduploader.core.auth.BearerTokenFileProvider;
+import com.github.argon.moduploader.core.auth.BearerTokenFileSupplier;
 import com.github.argon.moduploader.core.file.IFileService;
-import com.github.argon.moduploader.core.vendor.modio.api.ModioGameClient;
-import com.github.argon.moduploader.core.vendor.modio.api.ModioModsClient;
-import com.github.argon.moduploader.core.vendor.modio.api.ModioOAuthClient;
-import com.github.argon.moduploader.core.vendor.modio.api.ModioUserClient;
+import com.github.argon.moduploader.core.vendor.modio.api.ModioGameRestClient;
+import com.github.argon.moduploader.core.vendor.modio.api.ModioModsRestClient;
+import com.github.argon.moduploader.core.vendor.modio.api.ModioOAuthRestClient;
+import com.github.argon.moduploader.core.vendor.modio.api.ModioUserRestClient;
+import com.github.argon.moduploader.core.vendor.modio.mapper.ModioMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
@@ -48,16 +49,16 @@ public class ModioConfiguration {
 
     @Singleton
     @Produces
-    public BearerTokenFileProvider bearerTokenFileProvider(IFileService fileService) {
+    public BearerTokenFileSupplier bearerTokenFileProvider(IFileService fileService) {
         Path tokenFilePath = modioProperties.tokenFilePath();
-        return new BearerTokenFileProvider(tokenFilePath, fileService);
+        return new BearerTokenFileSupplier(tokenFilePath, fileService);
     }
 
     @Singleton
     @Produces
     public ModioAuthService modioAuthService(
-        @RestClient ModioOAuthClient modioAuthClient,
-        BearerTokenFileProvider bearerTokenProvider,
+        @RestClient ModioOAuthRestClient modioAuthClient,
+        BearerTokenFileSupplier bearerTokenProvider,
         BearerTokenFileConsumer bearerTokenConsumer
     ) {
         return new ModioAuthService(modioAuthClient, bearerTokenProvider, bearerTokenConsumer);
@@ -66,30 +67,30 @@ public class ModioConfiguration {
     @Singleton
     @Produces
     public ModioUserService modioUserService(
-        @RestClient ModioUserClient modioUserClient,
+        @RestClient ModioUserRestClient modioUserRestClient,
         ModioMapper modioMapper
     ) {
-        return new ModioUserService(modioUserClient, modioMapper);
+        return new ModioUserService(modioUserRestClient, modioMapper);
     }
 
     @Singleton
     @Produces
     public ModioGameService modioGameService(
-        @RestClient ModioGameClient modioGameClient,
+        @RestClient ModioGameRestClient modioGameRestClient,
         ModioMapper modioMapper
     ) {
-        return new ModioGameService(modioGameClient, modioMapper);
+        return new ModioGameService(modioGameRestClient, modioMapper);
     }
 
     @Singleton
     @Produces
     public ModioModService modioStoreService(
-        @RestClient ModioModsClient modioModsClient,
+        @RestClient ModioModsRestClient modioModsRestClient,
         ModioMapper  modioMapper,
         IFileService fileService,
-        BearerTokenFileProvider bearerTokenProvider,
+        BearerTokenFileSupplier bearerTokenProvider,
         Validator validator
     ) {
-        return new ModioModService(modioModsClient, modioMapper, fileService, bearerTokenProvider, validator);
+        return new ModioModService(modioModsRestClient, modioMapper, fileService, bearerTokenProvider, validator);
     }
 }

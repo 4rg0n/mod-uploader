@@ -3,9 +3,9 @@ package com.github.argon.moduploader.core.vendor.modio;
 import com.github.argon.moduploader.core.auth.AuthException;
 import com.github.argon.moduploader.core.auth.BearerToken;
 import com.github.argon.moduploader.core.auth.BearerTokenFileConsumer;
-import com.github.argon.moduploader.core.auth.BearerTokenFileProvider;
+import com.github.argon.moduploader.core.auth.BearerTokenFileSupplier;
 import com.github.argon.moduploader.core.vendor.modio.api.ModioApiException;
-import com.github.argon.moduploader.core.vendor.modio.api.ModioOAuthClient;
+import com.github.argon.moduploader.core.vendor.modio.api.ModioOAuthRestClient;
 import com.github.argon.moduploader.core.vendor.modio.api.dto.ModioAccessTokenDto;
 import com.github.argon.moduploader.core.vendor.modio.api.dto.ModioEmailRequestResponseDto;
 import com.github.argon.moduploader.core.vendor.modio.api.dto.ModioLogoutDto;
@@ -20,8 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class ModioAuthService {
-    private final ModioOAuthClient authClient;
-    private final BearerTokenFileProvider bearerTokenProvider;
+    private final ModioOAuthRestClient authClient;
+    private final BearerTokenFileSupplier bearerTokenProvider;
     private final BearerTokenFileConsumer bearerTokenConsumer;
 
     @Nullable

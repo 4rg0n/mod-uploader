@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface RepoMapper<ID, T> {
-    void map(PreparedStatement statement, T entity) throws SQLException;
-    Optional<T> map(ResultSet rs) throws SQLException;
-    List<T> mapList(ResultSet rs) throws SQLException;
-    void mapIdIn(PreparedStatement statement, int idx, ID id) throws SQLException;
-    ID mapId(ResultSet resultSet) throws SQLException;
-    void mapId(PreparedStatement statement , ID id) throws SQLException;
+    void mapStatement(PreparedStatement statement, T entity) throws SQLException;
+    Optional<T> mapResult(ResultSet rs) throws SQLException;
+    List<T> mapResultList(ResultSet rs) throws SQLException;
+    void mapStatementIdIn(PreparedStatement statement, int idx, ID id) throws SQLException;
+    ID mapResultId(ResultSet resultSet) throws SQLException;
+    void mapStatementId(PreparedStatement statement , ID id) throws SQLException;
 }

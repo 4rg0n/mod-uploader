@@ -1,31 +1,26 @@
 package com.github.argon.moduploader.core.vendor.steam;
 
-import com.github.argon.moduploader.core.vendor.steam.api.SteamPoweredStoreClient;
-import com.github.argon.moduploader.core.vendor.steam.api.SteamStoreClient;
-import com.github.argon.moduploader.core.vendor.steam.api.dto.SteamSimpleAppDto;
+import com.github.argon.moduploader.core.Page;
+import com.github.argon.moduploader.core.cache.Caching;
 import com.github.argon.moduploader.core.vendor.steam.model.SteamGame;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 @RequiredArgsConstructor
 public class SteamStoreService {
-    private final SteamStoreClient storeClient;
-    private final SteamPoweredStoreClient poweredStoreClient;
+    private final Caching<Long, SteamGame> cachingService;
 
-    public List<SteamGame> getApps(String apiKey) {
-        List<SteamSimpleAppDto> simpleApps = storeClient.getApps(
-            apiKey,
-            true,
-            false,
-            true,
-            false,
-            false,
-            null,
-            1000
-        );
+    public Page<SteamGame> getGames(Pageable pageable) {
+        return cachingService.getAll(pageable);
+    }
 
+    public List<SteamGame> searchGames(String searchTerm) {
+        return cachingService.find(searchTerm);
+    }
 
-        return null;
+    public Page<SteamGame> searchGames(String searchTerm, Pageable pageable) {
+        return cachingService.find(searchTerm, pageable);
     }
 }

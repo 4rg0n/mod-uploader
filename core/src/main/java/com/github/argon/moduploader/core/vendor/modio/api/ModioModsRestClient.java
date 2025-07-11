@@ -1,6 +1,7 @@
 package com.github.argon.moduploader.core.vendor.modio.api;
 
 import com.github.argon.moduploader.core.vendor.modio.api.dto.*;
+import com.github.argon.moduploader.core.vendor.modio.mapper.ModioApiErrorMapper;
 import jakarta.annotation.Nullable;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -16,8 +17,9 @@ import java.util.Optional;
  */
 @Path("games")
 @RegisterRestClient
+@RegisterProvider(ModioApiErrorMapper.class)
 @RegisterProvider(ModioDtoMapper.class) // use custom configured jackson object mapper
-public interface ModioModsClient {
+public interface ModioModsRestClient {
 
     /**
      * For fetching information about a single mod

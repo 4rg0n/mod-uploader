@@ -1,6 +1,7 @@
 package com.github.argon.moduploader.core.vendor.modio.api;
 
 import com.github.argon.moduploader.core.vendor.modio.api.dto.*;
+import com.github.argon.moduploader.core.vendor.modio.mapper.ModioApiErrorMapper;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
@@ -11,8 +12,9 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
  */
 @Path("oauth")
 @RegisterRestClient
+@RegisterProvider(ModioApiErrorMapper.class)
 @RegisterProvider(ModioDtoMapper.class) // use custom configured jackson object mapper
-public interface ModioOAuthClient {
+public interface ModioOAuthRestClient {
 
     /**
      * Invalidates the bearer token and logs the user out

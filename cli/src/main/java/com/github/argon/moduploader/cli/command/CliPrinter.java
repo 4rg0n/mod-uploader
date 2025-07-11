@@ -2,6 +2,7 @@ package com.github.argon.moduploader.cli.command;
 
 import com.github.argon.moduploader.core.vendor.modio.model.ModioGame;
 import com.github.argon.moduploader.core.vendor.modio.model.ModioMod;
+import com.github.argon.moduploader.core.vendor.steam.model.SteamGame;
 import com.github.argon.moduploader.core.vendor.steam.model.SteamMod;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -22,6 +23,24 @@ public class CliPrinter {
             steamMod.name(),
             steamMod.ownerId(),
             steamMod.timeUpdated());
+    }
+
+    public void printSteamGame(@Nullable SteamGame steamGame) {
+        if (steamGame == null) {
+            return;
+        }
+
+        System.out.printf("%s\t%s",
+            steamGame.id(),
+            steamGame.name()
+        );
+    }
+
+    public void printSteamGames(List<SteamGame> games) {
+        printTable(games, game -> new String[]{
+            game.id().toString(),
+            game.name()
+        }, "id", "name");
     }
 
     public void printModioGames(List<ModioGame> games) {

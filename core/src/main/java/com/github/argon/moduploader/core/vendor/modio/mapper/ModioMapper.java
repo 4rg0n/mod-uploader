@@ -1,4 +1,4 @@
-package com.github.argon.moduploader.core.vendor.modio;
+package com.github.argon.moduploader.core.vendor.modio.mapper;
 
 import com.github.argon.moduploader.core.file.IFileService;
 import com.github.argon.moduploader.core.vendor.CommonMapper;
@@ -23,18 +23,18 @@ public abstract class ModioMapper {
     @Mapping(target = "owner", source = "submittedBy.username")
     @Mapping(target = "timeCreated", source = "dateAdded", qualifiedByName = "toInstant")
     @Mapping(target = "timeUpdated", source = "dateUpdated", qualifiedByName = "toInstant")
-    abstract ModioMod.Remote map(ModioModDto modDto);
+    public abstract ModioMod.Remote map(ModioModDto modDto);
 
-    abstract ModioUser map(ModioUserDto userDto);
+    public abstract ModioUser map(ModioUserDto userDto);
 
     @Mapping(target = "timeCreated", source = "dateAdded", qualifiedByName = "toInstant")
     @Mapping(target = "timeUpdated", source = "dateUpdated", qualifiedByName = "toInstant")
-    abstract ModioGame map(ModioGameDto gameDto);
+    public abstract ModioGame map(ModioGameDto gameDto);
 
     @Mapping(target = "logo", source = "logoData")
-    abstract ModioEditModDto mapEdit(byte[] logoData, ModioMod.Local mod);
+    public abstract ModioEditModDto mapEdit(byte[] logoData, ModioMod.Local mod);
     @Mapping(target = "logo", source = "logoData")
-    abstract ModioAddModDto mapAdd(byte[] logoData, ModioMod.Local mod);
+    public abstract ModioAddModDto mapAdd(byte[] logoData, ModioMod.Local mod);
 
     public ModioEditModDto mapEdit(ModioMod.Local mod) throws VendorException {
         byte[] logoData;
@@ -59,5 +59,5 @@ public abstract class ModioMapper {
     }
 
     @Mapping(target = "id", source = "modId")
-    abstract ModioMod.Local map(Long modId, ModioMod.Local mod);
+    public abstract ModioMod.Local map(Long modId, ModioMod.Local mod);
 }

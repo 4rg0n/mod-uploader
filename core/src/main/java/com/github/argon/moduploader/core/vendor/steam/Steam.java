@@ -9,7 +9,7 @@ import com.github.argon.moduploader.core.NotInitializedException;
 import com.github.argon.moduploader.core.file.IFileService;
 import com.github.argon.moduploader.core.vendor.steam.api.SteamUserHandler;
 import com.github.argon.moduploader.core.vendor.steam.api.SteamWorkshopHandler;
-import com.github.argon.moduploader.core.vendor.steam.mapper.SteamMapper;
+import com.github.argon.moduploader.core.vendor.steam.mapper.SteamAPIMapper;
 import jakarta.annotation.Nullable;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,13 +36,11 @@ public class Steam implements Closeable, Awaitable, Runnable, Initializable<Inte
     private Integer appId = SteamConfiguration.DEFAULT_APP_ID;
     private final IFileService fileService;
 
-    private final SteamMapper mapper;
+    private final SteamAPIMapper mapper;
 
-    public Steam(IFileService fileService, SteamStoreService storeService, SteamMapper mapper) {
+    public Steam(IFileService fileService, SteamStoreService storeService, SteamAPIMapper mapper) {
         this(SteamConfiguration.STEAM_APP_ID_TXT, fileService, storeService, mapper);
     }
-
-
 
     /**
      * @param fileService for writing the steamAppIdTxt
@@ -52,12 +50,16 @@ public class Steam implements Closeable, Awaitable, Runnable, Initializable<Inte
         String steamAppIdTxt,
         IFileService fileService,
         SteamStoreService storeService,
-        SteamMapper mapper
+        SteamAPIMapper mapper
     ) {
         this.steamAppIdTxt = steamAppIdTxt;
         this.fileService = fileService;
         this.mapper = mapper;
         this.store = storeService;
+    }
+
+    public SteamStoreService store() {
+        return store;
     }
 
     public SteamWorkshopService workshop() {

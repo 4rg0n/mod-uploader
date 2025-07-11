@@ -2,11 +2,12 @@ package com.github.argon.moduploader.core.vendor.modio;
 
 import com.github.argon.moduploader.core.auth.AuthException;
 import com.github.argon.moduploader.core.auth.BearerToken;
-import com.github.argon.moduploader.core.auth.BearerTokenFileProvider;
+import com.github.argon.moduploader.core.auth.BearerTokenFileSupplier;
 import com.github.argon.moduploader.core.file.IFileService;
 import com.github.argon.moduploader.core.vendor.VendorException;
-import com.github.argon.moduploader.core.vendor.modio.api.ModioModsClient;
+import com.github.argon.moduploader.core.vendor.modio.api.ModioModsRestClient;
 import com.github.argon.moduploader.core.vendor.modio.api.dto.*;
+import com.github.argon.moduploader.core.vendor.modio.mapper.ModioMapper;
 import com.github.argon.moduploader.core.vendor.modio.model.ModioMod;
 import jakarta.annotation.Nullable;
 import jakarta.validation.Validator;
@@ -27,10 +28,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ModioModService {
 
-    private final ModioModsClient modClient;
+    private final ModioModsRestClient modClient;
     private final ModioMapper mapper;
     private final IFileService fileService;
-    private final BearerTokenFileProvider bearerTokenProvider;
+    private final BearerTokenFileSupplier bearerTokenProvider;
     private final Validator validator;
 
     public List<ModioMod.Remote> getMods(

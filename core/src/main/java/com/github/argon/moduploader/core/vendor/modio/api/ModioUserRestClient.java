@@ -2,6 +2,7 @@ package com.github.argon.moduploader.core.vendor.modio.api;
 
 import com.github.argon.moduploader.core.vendor.modio.api.dto.ModioDtoMapper;
 import com.github.argon.moduploader.core.vendor.modio.api.dto.ModioUserDto;
+import com.github.argon.moduploader.core.vendor.modio.mapper.ModioApiErrorMapper;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.Path;
@@ -15,8 +16,9 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
  */
 @Path("me")
 @RegisterRestClient
+@RegisterProvider(ModioApiErrorMapper.class)
 @RegisterProvider(ModioDtoMapper.class) // use custom configured jackson object mapper
-public interface ModioUserClient {
+public interface ModioUserRestClient {
 
     /**
      * @param bearerToken issued for the user
